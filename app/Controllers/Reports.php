@@ -10,6 +10,7 @@ use App\Models\Reports\Detailed_receivings;
 use App\Models\Reports\Detailed_sales;
 use App\Models\Reports\Inventory_low;
 use App\Models\Reports\Inventory_summary;
+use App\Models\Reports\Inventory_expiry;
 use App\Models\Reports\Specific_customer;
 use App\Models\Reports\Specific_discount;
 use App\Models\Reports\Specific_employee;
@@ -50,6 +51,7 @@ class Reports extends Secure_Controller
     private Supplier $supplier;
     private Detailed_receivings $detailed_receivings;
     private Inventory_summary $inventory_summary;
+    private Inventory_expiry $inventory_expiry;
 
     public function __construct()
     {
@@ -77,6 +79,7 @@ class Reports extends Secure_Controller
         $this->supplier = model(Supplier::class);
         $this->detailed_receivings = model(Detailed_receivings::class);
         $this->inventory_summary = model(Inventory_summary::class);
+        $this->inventory_expiry = model(Inventory_expiry::class);
 
         if (sizeof($exploder) > 1) {
             preg_match('/(?:inventory)|([^_.]*)(?:_graph|_row)?$/', $method_name, $matches);
@@ -2058,6 +2061,78 @@ class Reports extends Secure_Controller
         return view('reports/inventory_summary_input', $data);
     }
 
+
+
+    /**
+     * @return string
+     */
+    public function inventory_expiry_input(): string
+    {
+        $this->clearCache();
+
+        $stock_locations = $this->stock_location->get_allowed_locations();
+        $stock_locations['all'] = lang('Reports.all');
+
+        return view('reports/inventory_expiry_input', [
+            'stock_locations' => array_reverse($stock_locations, true),
+            'default_days' => 90
+        ]);
+    }
+
+    /**
+     * @param string $location_id
+     * @param string $days_threshold
+     * @return string
+     */
+    public function inventory_expiry(string $location_id = 'all', string $days_threshold = '90'): string
+    {
+        $this->clearCache();
+
+        $inputs = [
+            'location_id' => $location_id,
+            'days_threshold' => (int)$days_threshold
+        ];
+
+        $report_data = $this->inventory_expiry->getData($inputs);
+
+        $tabular_data = [];
+        foreach ($report_data as $row) {
+            $tabular_data[] = [
+                'item_name' => $row['name'],
+                'item_number' => $row['item_number'],
+                'category' => $row['category'],
+                'batch_number' => $row['batch_number'],
+                'expiry_date' => to_date(strtotime($row['expiry_date'])),
+                'days_to_expiry' => (int)$row['days_to_expiry'],
+                'quantity' => to_quantity_decimals($row['quantity']),
+                'expiry_status' => lang('Reports.expiry_status_' . $row['expiry_status']),
+                'location_name' => $row['location_name']
+            ];
+        }
+
+        return view('reports/tabular', [
+            'title' => lang('Reports.inventory_expiry_report'),
+            'subtitle' => lang('Reports.expiry_within_days', [$days_threshold]),
+            'headers' => $this->inventory_expiry->getDataColumns(),
+            'data' => $tabular_data,
+            'summary_data' => $this->inventory_expiry->getSummaryData($report_data)
+        ]);
+    }
+
+    /**
+     * @return string
+     */
+    public function inventory_expiry_dashboard(): string
+    {
+        $this->clearCache();
+
+        $dashboard_data = $this->inventory_expiry->getDashboardData();
+
+        return view('reports/inventory_expiry_dashboard', [
+            'title' => lang('Reports.expiry_dashboard'),
+            'dashboard_data' => $dashboard_data
+        ]);
+    }
     /**
      * @param string $location_id
      * @param string $item_count
