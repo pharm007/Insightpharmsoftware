@@ -52,6 +52,7 @@ class Reports extends Secure_Controller
     private Detailed_receivings $detailed_receivings;
     private Inventory_summary $inventory_summary;
     private Inventory_expiry $inventory_expiry;
+    private Inventory_reorder $inventory_reorder;
 
     public function __construct()
     {
@@ -80,6 +81,7 @@ class Reports extends Secure_Controller
         $this->detailed_receivings = model(Detailed_receivings::class);
         $this->inventory_summary = model(Inventory_summary::class);
         $this->inventory_expiry = model(Inventory_expiry::class);
+        $this->inventory_reorder = model(Inventory_reorder::class);
 
         if (sizeof($exploder) > 1) {
             preg_match('/(?:inventory)|([^_.]*)(?:_graph|_row)?$/', $method_name, $matches);
@@ -2039,6 +2041,42 @@ class Reports extends Secure_Controller
         ];
 
         return view('reports/tabular', $data);
+    }
+
+
+
+    /**
+     * @param string $location_id
+     * @return string
+     */
+    public function inventory_reorder(string $location_id = 'all'): string
+    {
+        $this->clearCache();
+
+        $inputs = ['location_id' => $location_id];
+
+        $report_data = $this->inventory_reorder->getData($inputs);
+
+        $tabular_data = [];
+        foreach ($report_data as $row) {
+            $tabular_data[] = [
+                'item_name' => $row['name'],
+                'item_number' => $row['item_number'],
+                'category' => $row['category'],
+                'quantity' => to_quantity_decimals($row['quantity']),
+                'reorder_level' => to_quantity_decimals($row['reorder_level']),
+                'reorder_quantity' => to_quantity_decimals($row['reorder_quantity']),
+                'location_name' => $row['location_name']
+            ];
+        }
+
+        return view('reports/tabular', [
+            'title' => lang('Reports.inventory_reorder_report'),
+            'subtitle' => '',
+            'headers' => $this->inventory_reorder->getDataColumns(),
+            'data' => $tabular_data,
+            'summary_data' => $this->inventory_reorder->getSummaryData($report_data)
+        ]);
     }
 
     /**

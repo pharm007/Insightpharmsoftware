@@ -80,6 +80,8 @@ class Items extends Secure_Controller
             ? $stockLocation
             : $this->item_lib->get_item_location();
         $data['stock_locations'] = $this->stock_location->get_allowed_locations();
+        $data['low_stock_count'] = $this->item->get_low_stock_count((int)$data['stock_location']);
+        $data['reorder_report_url'] = site_url('reports/inventory_reorder/' . $data['stock_location']);
 
         // Filters that will be loaded in the multiselect dropdown
         $data['filters'] = [

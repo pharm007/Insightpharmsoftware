@@ -92,11 +92,13 @@ if (isset($error)) {
                 <div class="list-group">
                     <?php
                     $inventory_low_report = get_report_link('reports_inventory_low');
+                    $inventory_reorder_report = get_report_link('reports_inventory_reorder');
                     $inventory_summary_report = get_report_link('reports_inventory_summary');
                     $inventory_expiry_report = get_report_link('reports_inventory_expiry');
                     $inventory_expiry_dashboard = get_report_link('reports_inventory_expiry_dashboard', '', 'Reports.expiry_dashboard');
                     ?>
                     <a class="list-group-item" href="<?= $inventory_low_report['path'] ?>"><?= esc($inventory_low_report['label']) ?></a>
+                    <a class="list-group-item" href="<?= $inventory_reorder_report['path'] ?>"><?= esc($inventory_reorder_report['label']) ?></a>
                     <a class="list-group-item" href="<?= $inventory_summary_report['path'] ?>"><?= esc($inventory_summary_report['label']) ?></a>
                     <a class="list-group-item" href="<?= $inventory_expiry_report['path'] ?>"><?= esc($inventory_expiry_report['label']) ?></a>
                     <a class="list-group-item" href="<?= $inventory_expiry_dashboard['path'] ?>"><?= esc($inventory_expiry_dashboard['label']) ?></a>

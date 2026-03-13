@@ -298,6 +298,28 @@ class Item extends Model
         return $builder->get();
     }
 
+
+    /**
+     * Returns low stock item count based on reorder level
+     */
+    public function get_low_stock_count(int $stock_location_id = NEW_ENTRY): int
+    {
+        $builder = $this->db->table('items');
+        $builder->join('item_quantities', 'item_quantities.item_id = items.item_id');
+        $builder->join('stock_locations', 'stock_locations.location_id = item_quantities.location_id');
+        $builder->where('items.deleted', 0);
+        $builder->where('items.stock_type', 0);
+        $builder->where('stock_locations.deleted', 0);
+        $builder->where('items.reorder_level >', 0);
+        $builder->where('item_quantities.quantity <= items.reorder_level');
+
+        if ($stock_location_id > -1) {
+            $builder->where('item_quantities.location_id', $stock_location_id);
+        }
+
+        return $builder->countAllResults();
+    }
+
     /**
      * Gets information about a particular item
      */
