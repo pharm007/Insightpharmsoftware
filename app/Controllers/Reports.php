@@ -2123,6 +2123,7 @@ class Reports extends Secure_Controller
      * @return string
      */
     public function inventory_expiry(string $location_id = 'all', string $days_threshold = '90', string $expiry_status = 'all'): string
+    public function inventory_expiry(string $location_id = 'all', string $days_threshold = '90'): string
     {
         $this->clearCache();
 
@@ -2130,6 +2131,7 @@ class Reports extends Secure_Controller
             'location_id' => $location_id,
             'days_threshold' => (int)$days_threshold,
             'expiry_status' => $expiry_status
+            'days_threshold' => (int)$days_threshold
         ];
 
         $report_data = $this->inventory_expiry->getData($inputs);
@@ -2154,6 +2156,7 @@ class Reports extends Secure_Controller
             'subtitle' => $expiry_status === 'all'
                 ? lang('Reports.expiry_within_days', [$days_threshold])
                 : lang('Reports.expiry_within_days_status', [$days_threshold, lang('Reports.expiry_status_' . $expiry_status)]),
+            'subtitle' => lang('Reports.expiry_within_days', [$days_threshold]),
             'headers' => $this->inventory_expiry->getDataColumns(),
             'data' => $tabular_data,
             'summary_data' => $this->inventory_expiry->getSummaryData($report_data)
@@ -2175,6 +2178,7 @@ class Reports extends Secure_Controller
             'expired_report_url' => site_url('reports/inventory_expiry/all/3650/expired'),
             'critical_report_url' => site_url('reports/inventory_expiry/all/30/critical'),
             'warning_report_url' => site_url('reports/inventory_expiry/all/90/warning')
+            'dashboard_data' => $dashboard_data
         ]);
     }
     /**

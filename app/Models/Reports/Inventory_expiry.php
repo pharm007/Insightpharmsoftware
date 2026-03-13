@@ -33,6 +33,8 @@ class Inventory_expiry extends Report
         $days_threshold = max(0, (int)($inputs['days_threshold'] ?? 90));
         $location_id = $inputs['location_id'] ?? 'all';
         $expiry_status = $inputs['expiry_status'] ?? 'all';
+        $days_threshold = (int)($inputs['days_threshold'] ?? 90);
+        $location_id = $inputs['location_id'] ?? 'all';
 
         $item = model(Item::class);
 
@@ -50,6 +52,7 @@ class Inventory_expiry extends Report
                 WHEN expiry_value.attribute_date < CURDATE() THEN "expired"
                 WHEN DATEDIFF(expiry_value.attribute_date, CURDATE()) <= 30 THEN "critical"
                 WHEN DATEDIFF(expiry_value.attribute_date, CURDATE()) <= {$days_threshold} THEN "warning"
+                WHEN DATEDIFF(expiry_value.attribute_date, CURDATE()) <= ' . $days_threshold . ' THEN "warning"
                 ELSE "ok"
             END AS expiry_status'
         );
