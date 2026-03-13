@@ -30,6 +30,9 @@ class Inventory_expiry extends Report
      */
     public function getData(array $inputs): array
     {
+        $days_threshold = max(0, (int)($inputs['days_threshold'] ?? 90));
+        $location_id = $inputs['location_id'] ?? 'all';
+        $expiry_status = $inputs['expiry_status'] ?? 'all';
         $days_threshold = (int)($inputs['days_threshold'] ?? 90);
         $location_id = $inputs['location_id'] ?? 'all';
 
@@ -48,6 +51,7 @@ class Inventory_expiry extends Report
             CASE
                 WHEN expiry_value.attribute_date < CURDATE() THEN "expired"
                 WHEN DATEDIFF(expiry_value.attribute_date, CURDATE()) <= 30 THEN "critical"
+                WHEN DATEDIFF(expiry_value.attribute_date, CURDATE()) <= {$days_threshold} THEN "warning"
                 WHEN DATEDIFF(expiry_value.attribute_date, CURDATE()) <= ' . $days_threshold . ' THEN "warning"
                 ELSE "ok"
             END AS expiry_status'
@@ -75,6 +79,16 @@ class Inventory_expiry extends Report
 
         if ($location_id !== 'all') {
             $builder->where('stock_locations.location_id', $location_id);
+        }
+
+        if ($expiry_status === 'expired') {
+            $builder->where('DATEDIFF(expiry_value.attribute_date, CURDATE()) <', 0);
+        } elseif ($expiry_status === 'critical') {
+            $builder->where('DATEDIFF(expiry_value.attribute_date, CURDATE()) >=', 0);
+            $builder->where('DATEDIFF(expiry_value.attribute_date, CURDATE()) <=', 30);
+        } elseif ($expiry_status === 'warning') {
+            $builder->where('DATEDIFF(expiry_value.attribute_date, CURDATE()) >', 30);
+            $builder->where('DATEDIFF(expiry_value.attribute_date, CURDATE()) <=', $days_threshold);
         }
 
         $builder->orderBy('days_to_expiry', 'ASC');

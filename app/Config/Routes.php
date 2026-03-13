@@ -27,9 +27,12 @@ $routes->add('reports/graphical_(:any)', 'Reports::date_input');
 
 $routes->add('reports/inventory_(:any)/(:any)', 'Reports::Inventory_$1/$2');
 $routes->add('reports/inventory_low', 'Reports::inventory_low');
+$routes->add('reports/inventory_reorder', 'Reports::inventory_reorder');
+$routes->add('reports/inventory_reorder/(:any)', 'Reports::inventory_reorder/$1');
 $routes->add('reports/inventory_summary', 'Reports::inventory_summary_input');
 $routes->add('reports/inventory_summary/(:any)/(:any)/(:any)', 'Reports::inventory_summary/$1/$2/$3');
 $routes->add('reports/inventory_expiry', 'Reports::inventory_expiry_input');
+$routes->add('reports/inventory_expiry/(:any)/(:any)/(:any)', 'Reports::inventory_expiry/$1/$2/$3');
 $routes->add('reports/inventory_expiry/(:any)/(:any)', 'Reports::inventory_expiry/$1/$2');
 $routes->add('reports/inventory_expiry_dashboard', 'Reports::inventory_expiry_dashboard');
 

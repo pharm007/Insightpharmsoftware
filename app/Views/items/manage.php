@@ -76,6 +76,15 @@ use App\Models\Employee;
 
 <?= view('partial/table_filter_persistence', ['additional_params' => ['stock_location']]) ?>
 
+
+<?php if (($low_stock_count ?? 0) > 0) { ?>
+    <div class="alert alert-warning" role="alert">
+        <strong><?= lang('Items.reorder_alert_title') ?></strong>
+        <?= lang('Items.reorder_alert_message', [$low_stock_count]) ?>
+        <a href="<?= esc($reorder_report_url) ?>" class="alert-link"><?= lang('Items.view_reorder_report') ?></a>
+    </div>
+<?php } ?>
+
 <div id="title_bar" class="btn-toolbar print_hide">
     <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/csvImport" ?>" title="<?= lang('Items.import_items_csv') ?>">
         <span class="glyphicon glyphicon-import">&nbsp;</span><?= lang('Common.import_csv') ?>

@@ -52,6 +52,7 @@ class Reports extends Secure_Controller
     private Detailed_receivings $detailed_receivings;
     private Inventory_summary $inventory_summary;
     private Inventory_expiry $inventory_expiry;
+    private Inventory_reorder $inventory_reorder;
 
     public function __construct()
     {
@@ -80,6 +81,7 @@ class Reports extends Secure_Controller
         $this->detailed_receivings = model(Detailed_receivings::class);
         $this->inventory_summary = model(Inventory_summary::class);
         $this->inventory_expiry = model(Inventory_expiry::class);
+        $this->inventory_reorder = model(Inventory_reorder::class);
 
         if (sizeof($exploder) > 1) {
             preg_match('/(?:inventory)|([^_.]*)(?:_graph|_row)?$/', $method_name, $matches);
@@ -2041,6 +2043,42 @@ class Reports extends Secure_Controller
         return view('reports/tabular', $data);
     }
 
+
+
+    /**
+     * @param string $location_id
+     * @return string
+     */
+    public function inventory_reorder(string $location_id = 'all'): string
+    {
+        $this->clearCache();
+
+        $inputs = ['location_id' => $location_id];
+
+        $report_data = $this->inventory_reorder->getData($inputs);
+
+        $tabular_data = [];
+        foreach ($report_data as $row) {
+            $tabular_data[] = [
+                'item_name' => $row['name'],
+                'item_number' => $row['item_number'],
+                'category' => $row['category'],
+                'quantity' => to_quantity_decimals($row['quantity']),
+                'reorder_level' => to_quantity_decimals($row['reorder_level']),
+                'reorder_quantity' => to_quantity_decimals($row['reorder_quantity']),
+                'location_name' => $row['location_name']
+            ];
+        }
+
+        return view('reports/tabular', [
+            'title' => lang('Reports.inventory_reorder_report'),
+            'subtitle' => '',
+            'headers' => $this->inventory_reorder->getDataColumns(),
+            'data' => $tabular_data,
+            'summary_data' => $this->inventory_reorder->getSummaryData($report_data)
+        ]);
+    }
+
     /**
      * Gets the inventory summary input view. Used in app/Config/Routes.php
      *
@@ -2084,12 +2122,15 @@ class Reports extends Secure_Controller
      * @param string $days_threshold
      * @return string
      */
+    public function inventory_expiry(string $location_id = 'all', string $days_threshold = '90', string $expiry_status = 'all'): string
     public function inventory_expiry(string $location_id = 'all', string $days_threshold = '90'): string
     {
         $this->clearCache();
 
         $inputs = [
             'location_id' => $location_id,
+            'days_threshold' => (int)$days_threshold,
+            'expiry_status' => $expiry_status
             'days_threshold' => (int)$days_threshold
         ];
 
@@ -2112,6 +2153,9 @@ class Reports extends Secure_Controller
 
         return view('reports/tabular', [
             'title' => lang('Reports.inventory_expiry_report'),
+            'subtitle' => $expiry_status === 'all'
+                ? lang('Reports.expiry_within_days', [$days_threshold])
+                : lang('Reports.expiry_within_days_status', [$days_threshold, lang('Reports.expiry_status_' . $expiry_status)]),
             'subtitle' => lang('Reports.expiry_within_days', [$days_threshold]),
             'headers' => $this->inventory_expiry->getDataColumns(),
             'data' => $tabular_data,
@@ -2130,6 +2174,10 @@ class Reports extends Secure_Controller
 
         return view('reports/inventory_expiry_dashboard', [
             'title' => lang('Reports.expiry_dashboard'),
+            'dashboard_data' => $dashboard_data,
+            'expired_report_url' => site_url('reports/inventory_expiry/all/3650/expired'),
+            'critical_report_url' => site_url('reports/inventory_expiry/all/30/critical'),
+            'warning_report_url' => site_url('reports/inventory_expiry/all/90/warning')
             'dashboard_data' => $dashboard_data
         ]);
     }
